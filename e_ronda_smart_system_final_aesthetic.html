@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=800">
+    <title>E-Ronda Smart System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            background-color: #030712; 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh;
+            min-width: 800px; 
+            margin: 0;
+            padding: 40px 0;
+        }
+        #captureArea { 
+            width: 800px; 
+            background: linear-gradient(135deg, #070C1A 0%, #0c1328 100%); 
+            padding: 45px; 
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(16, 185, 129, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+        .grid-calendar { 
+            display: grid; 
+            grid-template-columns: repeat(7, 1fr); 
+            gap: 12px; 
+        }
+        .day-box { 
+            height: 110px; 
+            background: rgba(17, 24, 39, 0.6); 
+            backdrop-filter: blur(8px);
+            border-radius: 16px; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            border-left: 6px solid #374151; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-top: 1px solid rgba(255, 255, 255, 0.02);
+            border-right: 1px solid rgba(255, 255, 255, 0.02);
+        }
+        .day-box:hover {
+            transform: translateY(-2px);
+            background: rgba(17, 24, 39, 0.9);
+            box-shadow: 0 10px 20px -10px rgba(0, 0, 0, 0.7);
+        }
+        .regu-jumat { 
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important; 
+            border-left: 6px solid #60a5fa !important; 
+            box-shadow: 0 8px 20px -6px rgba(37, 99, 235, 0.4);
+        }
+        .info-card { 
+            background: rgba(17, 24, 39, 0.6); 
+            backdrop-filter: blur(8px);
+            border-radius: 16px; 
+            padding: 18px; 
+            border-top: 5px solid transparent; 
+            border-left: 1px solid rgba(255, 255, 255, 0.02);
+            border-right: 1px solid rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.01);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .divider-line { 
+            height: 2px; 
+            background: linear-gradient(90deg, rgba(16, 185, 129, 0) 0%, rgba(16, 185, 129, 0.8) 50%, rgba(16, 185, 129, 0) 100%); 
+            margin: 25px 0; 
+        }
+    </style>
+</head>
+<body class="text-white">
+
+    <div id="captureArea">
+        <div class="text-center mb-6">
+            <h1 class="text-4xl font-extrabold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-100 to-gray-300">JADWAL RONDA FLAMBOYAN</h1>
+            <p class="text-[11px] text-emerald-400 mt-3 font-extrabold tracking-[0.25em] uppercase">BLOK FLAMBOYAN RT 05 RW 09 - PERUM KOTA GALUH, CIAMIS</p>
+        </div>
+
+        <!-- Garis Pemisah Estetis -->
+        <div class="divider-line"></div>
+
+        <div class="flex justify-between items-center mb-8" id="controls">
+            <h2 id="monthTitle" class="text-2xl font-bold tracking-tight text-gray-100"></h2>
+            <div class="flex gap-3">
+                <button onclick="changeMonth(-1)" class="w-10 h-10 bg-white/5 hover:bg-white/10 active:scale-95 transition rounded-full flex items-center justify-center border border-white/10"><i class="fa fa-chevron-left text-sm text-gray-300"></i></button>
+                <button onclick="changeMonth(1)" class="w-10 h-10 bg-white/5 hover:bg-white/10 active:scale-95 transition rounded-full flex items-center justify-center border border-white/10"><i class="fa fa-chevron-right text-sm text-gray-300"></i></button>
+                <button onclick="downloadImage()" class="px-6 py-2 bg-gradient-to-r from-emerald-600 to-emerald-500 rounded-full font-bold text-xs tracking-wider uppercase hover:from-emerald-500 hover:to-emerald-400 active:scale-95 transition-all shadow-lg shadow-emerald-950/40">
+                    <i class="fa fa-download mr-2"></i>UNDUH JPEG
+                </button>
+            </div>
+        </div>
+
+        <div class="grid-calendar text-center text-[10px] font-extrabold text-gray-400 mb-5 uppercase tracking-widest">
+            <div>Minggu</div><div>Senin</div><div>Selasa</div><div>Rabu</div><div>Kamis</div><div>Jumat</div><div>Sabtu</div>
+        </div>
+        <div id="calendarGrid" class="grid-calendar mb-10"></div>
+
+        <div class="flex items-center gap-3 mb-5">
+            <div class="w-2.5 h-6 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-full"></div>
+            <h3 class="text-lg font-bold tracking-tight text-gray-200">PAPAN INFORMASI REGU</h3>
+        </div>
+        <div id="infoBoard" class="grid grid-cols-5 gap-3"></div>
+    </div>
+
+    <script>
+        let date = new Date();
+        const epochDate = new Date(2026, 0, 1);
+        const reguData = {
+            1: { name: 'Regu 1', members: ['DIKA', 'RIDWAN', 'BUNYAMIN', 'YAM', 'HELMI'], color: '#f97316' },
+            2: { name: 'Regu 2', members: ['DEDE', 'CECEP', 'WAHYU', 'REDI', 'BANGBANG'], color: '#22c55e' },
+            3: { name: 'Regu 3', members: ['DANI', 'YUDAN', 'HERI', 'RAMADHAN', 'RISKI'], color: '#eab308' },
+            4: { name: 'Regu 4', members: ['ZAINU', 'MOELYADI', 'GILANG', 'DADAN', 'TAUFIQ'], color: '#a855f7' }
+        };
+
+        function getRegu(d) {
+            let c = 0; let t = new Date(epochDate);
+            while(t < new Date(date.getFullYear(), date.getMonth(), d)) { if(t.getDay() !== 5) c++; t.setDate(t.getDate()+1); }
+            return (c % 4) + 1;
+        }
+
+        function render() {
+            const grid = document.getElementById('calendarGrid'); grid.innerHTML = '';
+            document.getElementById('monthTitle').innerText = date.toLocaleString('id-ID', {month:'long', year:'numeric'}).toUpperCase();
+            const days = new Date(date.getFullYear(), date.getMonth()+1, 0).getDate();
+            const first = new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+            
+            for(let i=0; i<first; i++) grid.innerHTML += '<div></div>';
+            for(let d=1; d<=days; d++) {
+                const cur = new Date(date.getFullYear(), date.getMonth(), d);
+                if(cur.getDay() === 5) {
+                    grid.innerHTML += `<div class="day-box regu-jumat"><b class="text-3xl font-extrabold tracking-tight">${d}</b><span class="text-[9px] font-extrabold uppercase mt-2 tracking-wider text-blue-100 text-center max-w-[90%] leading-tight">Ronda Bersama</span></div>`;
+                } else {
+                    const r = reguData[getRegu(d)];
+                    grid.innerHTML += `<div class="day-box" style="border-left-color:${r.color}"><b class="text-3xl font-extrabold tracking-tight">${d}</b><span class="text-[9px] font-bold opacity-70 uppercase mt-2 tracking-wider text-gray-300 text-center max-w-[90%] leading-tight">${r.name}</span></div>`;
+                }
+            }
+            const info = document.getElementById('infoBoard'); info.innerHTML = '';
+            for(let i=1; i<=4; i++) info.innerHTML += `<div class="info-card" style="border-top-color:${reguData[i].color}"><div class="font-extrabold text-xs mb-3 text-white uppercase tracking-wider">${reguData[i].name}</div><div class="text-[10px] text-gray-400 font-medium leading-relaxed">${reguData[i].members.join('<br>')}</div></div>`;
+            info.innerHTML += `<div class="info-card border-t-[5px] border-blue-500"><div class="font-extrabold text-xs mb-3 text-white uppercase tracking-wider">Semua</div><div class="text-[10px] text-blue-300 font-bold leading-relaxed">Jumat<br><span class="text-[9px] text-blue-400 font-normal">Ronda Bersama</span></div></div>`;
+        }
+
+        async function downloadImage() {
+            const el = document.getElementById('captureArea');
+            const controls = document.getElementById('controls');
+            controls.style.display = 'none';
+            
+            const canvas = await html2canvas(el, { scale: 2, backgroundColor: '#070c1a', width: 800 });
+            
+            canvas.toBlob(blob => {
+                const a = document.createElement('a'); 
+                a.href = URL.createObjectURL(blob); 
+                a.download = `Jadwal_Ronda_${date.toLocaleString('id-ID', {month:'long'})}.jpg`; 
+                a.click();
+                controls.style.display = 'flex';
+            }, 'image/jpeg', 1.0);
+        }
+        function changeMonth(m) { date.setMonth(date.getMonth() + m); render(); }
+        render();
+    </script>
+</body>
+</html>
