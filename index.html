@@ -255,7 +255,7 @@
             document.getElementById('themeIcon').className = 'fa fa-moon text-sm text-indigo-600';
         }
 
-        function render() {
+        function render(excludeHighlight = false) {
             const grid = document.getElementById('calendarGrid'); 
             grid.innerHTML = '';
             document.getElementById('monthTitle').innerText = date.toLocaleString('id-ID', {month:'long', year:'numeric'}).toUpperCase();
@@ -263,25 +263,58 @@
             const days = new Date(date.getFullYear(), date.getMonth()+1, 0).getDate();
             const first = new Date(date.getFullYear(), date.getMonth(), 1).getDay();
             
+            // Dapatkan waktu riil hari ini untuk validasi highlight
+            const realToday = new Date();
+            const currentYear = date.getFullYear();
+            const currentMonth = date.getMonth();
+
             // Render kotak kosong untuk offset hari pertama awal bulan
             for(let i=0; i<first; i++) grid.innerHTML += '<div></div>';
             
             // Perulangan hari dalam sebulan
             for(let d=1; d<=days; d++) {
-                const cur = new Date(date.getFullYear(), date.getMonth(), d);
+                const cur = new Date(currentYear, currentMonth, d);
+                
+                // Cek apakah tanggal hari ini sedang aktif (sama dengan tanggal riil) dan tidak sedang dalam mode unduh
+                const isTodayActive = !excludeHighlight && 
+                                     realToday.getDate() === d && 
+                                     realToday.getMonth() === currentMonth && 
+                                     realToday.getFullYear() === currentYear;
+
                 if(cur.getDay() === 5) {
-                    grid.innerHTML += `
-                        <div class="day-box regu-jumat flex flex-col justify-center items-center text-center">
-                            <b class="text-3xl font-extrabold tracking-tight">${d}</b>
-                            <span class="text-[9px] font-extrabold uppercase mt-2 tracking-wider leading-tight">Ronda Bersama</span>
-                        </div>`;
+                    if (isTodayActive) {
+                        // Highlight Hari Jumat Aktif (Ronda Bersama) di Web
+                        grid.innerHTML += `
+                            <div class="day-box regu-jumat flex flex-col justify-center items-center text-center scale-[1.04] z-10 shadow-xl ring-4 ring-blue-400/50">
+                                <b class="text-3xl font-extrabold tracking-tight text-white">${d}</b>
+                                <span class="text-[9px] font-extrabold uppercase mt-2 tracking-wider leading-tight text-blue-100">Ronda Bersama</span>
+                            </div>`;
+                    } else {
+                        // Hari Jumat Biasa
+                        grid.innerHTML += `
+                            <div class="day-box regu-jumat flex flex-col justify-center items-center text-center">
+                                <b class="text-3xl font-extrabold tracking-tight">${d}</b>
+                                <span class="text-[9px] font-extrabold uppercase mt-2 tracking-wider leading-tight">Ronda Bersama</span>
+                            </div>`;
+                    }
                 } else {
                     const r = reguData[getRegu(d)];
-                    grid.innerHTML += `
-                        <div class="day-box flex flex-col justify-center items-center text-center" style="border-left-color:${r.color}">
-                            <b class="text-3xl font-extrabold tracking-tight text-main-val">${d}</b>
-                            <span class="text-[9px] font-bold opacity-70 uppercase mt-2 tracking-wider text-sub-val leading-tight">${r.name}</span>
-                        </div>`;
+                    if (isTodayActive) {
+                        // Highlight Regu Aktif di Web: Menggunakan Blok Warna Penuh sesuai Warna Regu, Efek Glow & Zoom Lembut
+                        grid.innerHTML += `
+                            <div class="day-box flex flex-col justify-center items-center text-center scale-[1.04] z-10 shadow-xl border-l-0" 
+                                 style="background: ${r.color} !important; border: 2.5px solid rgba(255, 255, 255, 0.45) !important; box-shadow: 0 10px 25px -5px ${r.color}66;">
+                                <b class="text-3xl font-extrabold tracking-tight text-white">${d}</b>
+                                <span class="text-[9px] font-extrabold uppercase mt-2 tracking-wider leading-tight text-white opacity-95">${r.name}</span>
+                            </div>`;
+                    } else {
+                        // Hari Regu Biasa (Hanya Strip Samping)
+                        grid.innerHTML += `
+                            <div class="day-box flex flex-col justify-center items-center text-center" style="border-left-color:${r.color}">
+                                <b class="text-3xl font-extrabold tracking-tight text-main-val">${d}</b>
+                                <span class="text-[9px] font-bold opacity-70 uppercase mt-2 tracking-wider text-sub-val leading-tight">${r.name}</span>
+                            </div>`;
+                    }
                 }
             }
             
@@ -306,24 +339,31 @@
             const el = document.getElementById('captureArea');
             const controls = document.getElementById('controls');
             
-            // Gunakan visibility: hidden agar space layout bulan & tahun tetap bertahan utuh dan tidak tergeser
+            // 1. Sembunyikan kontrol
             controls.style.visibility = 'hidden';
+
+            // 2. Re-render tanpa highlight tanggal aktif sekarang agar hasil cetak JPEG bersih & normal
+            render(true);
 
             const isLightTheme = document.body.classList.contains('light-theme');
             const captureBgColor = isLightTheme ? '#ffffff' : '#070c1a';
             
+            // 3. Ambil tangkapan layar menggunakan html2canvas
             const canvas = await html2canvas(el, { 
                 scale: 2, 
                 backgroundColor: captureBgColor, 
                 width: 800 
             });
             
+            // 4. Setelah tangkapan layar selesai diambil, kembalikan highlight di web ke semula
+            render(false);
+            controls.style.visibility = 'visible';
+
             canvas.toBlob(blob => {
                 const a = document.createElement('a'); 
                 a.href = URL.createObjectURL(blob); 
                 a.download = `Jadwal_Ronda_${date.toLocaleString('id-ID', {month:'long', year:'numeric'}).replace(' ', '_')}.jpg`; 
                 a.click();
-                controls.style.visibility = 'visible';
             }, 'image/jpeg', 1.0);
         }
         
