@@ -10,8 +10,58 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     
     <style>
+        :root {
+            --bg-body: #030712;
+            --bg-capture: linear-gradient(135deg, #070C1A 0%, #0c1328 100%);
+            --bg-box: rgba(17, 24, 39, 0.6);
+            --border-box: rgba(255, 255, 255, 0.03);
+            --text-main: #ffffff;
+            --text-sub: #9ca3af;
+            --border-default: #374151;
+            --shadow-capture: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(16, 185, 129, 0.03);
+            --divider-grad: linear-gradient(90deg, rgba(52, 211, 153, 0) 0%, rgba(52, 211, 153, 0.8) 50%, rgba(52, 211, 153, 0) 100%);
+            --control-border: rgba(255, 255, 255, 0.1);
+            --control-btn-bg: rgba(255, 255, 255, 0.05);
+            --control-btn-hover: rgba(255, 255, 255, 0.1);
+            --control-text: #d1d5db;
+            --blue-text: #60a5fa;
+            --accent-color: #34d399; /* Emerald 400 untuk Dark Mode */
+
+            /* Variabel Khusus Hari Jumat (Ronda Bersama) */
+            --bg-jumat: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            --border-jumat: #60a5fa;
+            --text-jumat-num: #ffffff;
+            --text-jumat-label: #dbeafe;
+            --shadow-jumat: 0 8px 20px -6px rgba(37, 99, 235, 0.4);
+        }
+
+        .light-theme {
+            --bg-body: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%); /* Latar belakang gradasi lembut */
+            --bg-capture: #ffffff; /* Latar belakang kartu putih bersih */
+            --bg-box: #f8fafc; /* Kotak kalender abu-abu super lembut */
+            --border-box: rgba(15, 23, 42, 0.06);
+            --text-main: #0f172a; /* Teks utama abu-batu gelap premium */
+            --text-sub: #64748b; /* Teks sekunder abu-abu teduh */
+            --border-default: #e2e8f0; /* Garis pembatas tipis */
+            --shadow-capture: 0 20px 40px -15px rgba(15, 23, 42, 0.06), 0 0 30px rgba(16, 185, 129, 0.01);
+            --divider-grad: linear-gradient(90deg, rgba(5, 150, 105, 0) 0%, rgba(5, 150, 105, 0.5) 50%, rgba(5, 150, 105, 0) 100%);
+            --control-border: #e2e8f0;
+            --control-btn-bg: #f8fafc;
+            --control-btn-hover: #f1f5f9;
+            --control-text: #475569;
+            --blue-text: #1d4ed8;
+            --accent-color: #059669; /* Emerald 600 untuk kontras maksimal di Light Mode */
+
+            /* Desain Ulang Hari Jumat versi Pastel Lembut (Sangat Nyaman di Mata) */
+            --bg-jumat: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            --border-jumat: #3b82f6;
+            --text-jumat-num: #1d4ed8;
+            --text-jumat-label: #1e40af;
+            --shadow-jumat: 0 4px 12px -3px rgba(59, 130, 246, 0.15);
+        }
+
         body { 
-            background-color: #030712; 
+            background: var(--bg-body); 
             font-family: 'Plus Jakarta Sans', sans-serif; 
             display: flex; 
             justify-content: center; 
@@ -20,14 +70,16 @@
             min-width: 800px; 
             margin: 0;
             padding: 40px 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
         #captureArea { 
             width: 800px; 
-            background: linear-gradient(135deg, #070C1A 0%, #0c1328 100%); 
+            background: var(--bg-capture); 
             padding: 45px; 
             border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(16, 185, 129, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.03);
+            box-shadow: var(--shadow-capture);
+            border: 1px solid var(--border-box);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .grid-calendar { 
             display: grid; 
@@ -36,43 +88,79 @@
         }
         .day-box { 
             height: 110px; 
-            background: rgba(17, 24, 39, 0.6); 
+            background: var(--bg-box); 
             backdrop-filter: blur(8px);
             border-radius: 16px; 
             display: flex; 
             flex-direction: column; 
             justify-content: center; 
             align-items: center; 
-            border-left: 6px solid #374151; 
+            border-left: 6px solid var(--border-default); 
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border-top: 1px solid rgba(255, 255, 255, 0.02);
-            border-right: 1px solid rgba(255, 255, 255, 0.02);
+            border-top: 1px solid var(--border-box);
+            border-right: 1px solid var(--border-box);
+            color: var(--text-main);
         }
         .day-box:hover {
             transform: translateY(-2px);
-            background: rgba(17, 24, 39, 0.9);
-            box-shadow: 0 10px 20px -10px rgba(0, 0, 0, 0.7);
+            box-shadow: 0 10px 20px -10px rgba(0, 0, 0, 0.15);
         }
         .regu-jumat { 
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important; 
-            border-left: 6px solid #60a5fa !important; 
-            box-shadow: 0 8px 20px -6px rgba(37, 99, 235, 0.4);
+            background: var(--bg-jumat) !important; 
+            border-left: 6px solid var(--border-jumat) !important; 
+            box-shadow: var(--shadow-jumat);
+        }
+        .regu-jumat b {
+            color: var(--text-jumat-num) !important;
+        }
+        .regu-jumat span {
+            color: var(--text-jumat-label) !important;
         }
         .info-card { 
-            background: rgba(17, 24, 39, 0.6); 
+            background: var(--bg-box); 
             backdrop-filter: blur(8px);
             border-radius: 16px; 
             padding: 18px; 
             border-top: 5px solid transparent; 
-            border-left: 1px solid rgba(255, 255, 255, 0.02);
-            border-right: 1px solid rgba(255, 255, 255, 0.02);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.01);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border-left: 1px solid var(--border-box);
+            border-right: 1px solid var(--border-box);
+            border-bottom: 1px solid var(--border-box);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .divider-line { 
             height: 2px; 
-            background: linear-gradient(90deg, rgba(16, 185, 129, 0) 0%, rgba(16, 185, 129, 0.8) 50%, rgba(16, 185, 129, 0) 100%); 
+            background: var(--divider-grad); 
             margin: 25px 0; 
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .main-title {
+            text-shadow: 0 2px 10px rgba(255, 255, 255, 0.05);
+            transition: text-shadow 0.4s ease;
+        }
+        .light-theme .main-title {
+            text-shadow: none;
+        }
+        .control-btn {
+            background: var(--control-btn-bg);
+            border: 1px solid var(--control-border);
+            color: var(--control-text);
+            transition: all 0.3s ease;
+        }
+        .control-btn:hover {
+            background: var(--control-btn-hover);
+        }
+        .text-main-val {
+            color: var(--text-main) !important;
+            transition: color 0.4s ease;
+        }
+        .text-sub-val {
+            color: var(--text-sub) !important;
+            transition: color 0.4s ease;
+        }
+        .info-card-blue-text {
+            color: var(--blue-text) !important;
+            transition: color 0.4s ease;
         }
     </style>
 </head>
@@ -80,29 +168,34 @@
 
     <div id="captureArea">
         <div class="text-center mb-6">
-            <!-- Solid text color fixes the html2canvas white-block glitch -->
-            <h1 class="text-4xl font-extrabold tracking-wider text-white drop-shadow-[0_2px_10px_rgba(255,255,255,0.15)]">JADWAL RONDA FLAMBOYAN</h1>
-            <p class="text-[11px] text-emerald-400 mt-3 font-extrabold tracking-[0.25em] uppercase">BLOK FLAMBOYAN RT 05 RW 09 - PERUM KOTA GALUH, CIAMIS</p>
+            <h1 class="text-4xl font-extrabold tracking-wider text-main-val main-title">JADWAL RONDA FLAMBOYAN</h1>
+            <p id="subTitle" class="text-[11px] mt-3 font-extrabold tracking-[0.25em] uppercase transition-colors duration-300" style="color: var(--accent-color)">BLOK FLAMBOYAN RT 05 RW 09 - PERUM KOTA GALUH, CIAMIS</p>
         </div>
 
         <!-- Garis Pemisah Estetis -->
         <div class="divider-line"></div>
 
-        <!-- Struktur layout baru: Memisahkan Header Bulan dari Tombol Aksi Kontrol -->
+        <!-- Layout Header Bulan dan Tombol Aksi -->
         <div class="flex justify-between items-center mb-8">
-            <h2 id="monthTitle" class="text-2xl font-bold tracking-tight text-gray-100"></h2>
+            <h2 id="monthTitle" class="text-2xl font-bold tracking-tight text-main-val"></h2>
             
-            <div class="flex gap-3" id="controls">
-                <button onclick="changeMonth(-1)" class="w-10 h-10 bg-white/5 hover:bg-white/10 active:scale-95 transition rounded-full flex items-center justify-center border border-white/10"><i class="fa fa-chevron-left text-sm text-gray-300"></i></button>
-                <button onclick="changeMonth(1)" class="w-10 h-10 bg-white/5 hover:bg-white/10 active:scale-95 transition rounded-full flex items-center justify-center border border-white/10"><i class="fa fa-chevron-right text-sm text-gray-300"></i></button>
-                <button onclick="downloadImage()" class="px-6 py-2 bg-gradient-to-r from-emerald-600 to-emerald-500 rounded-full font-bold text-xs tracking-wider uppercase hover:from-emerald-500 hover:to-emerald-400 active:scale-95 transition-all shadow-lg shadow-emerald-950/40">
+            <div class="flex gap-3 items-center" id="controls">
+                <button onclick="changeMonth(-1)" class="w-10 h-10 control-btn rounded-full flex items-center justify-center active:scale-95"><i class="fa fa-chevron-left text-sm"></i></button>
+                <button onclick="changeMonth(1)" class="w-10 h-10 control-btn rounded-full flex items-center justify-center active:scale-95"><i class="fa fa-chevron-right text-sm"></i></button>
+                
+                <!-- Tombol Ganti Tema (Moon/Sun) -->
+                <button id="themeToggleBtn" onclick="toggleTheme()" class="w-10 h-10 control-btn rounded-full flex items-center justify-center active:scale-95" title="Ubah Tema">
+                    <i id="themeIcon" class="fa fa-sun text-sm text-yellow-400"></i>
+                </button>
+
+                <button onclick="downloadImage()" class="px-6 py-2 bg-gradient-to-r from-emerald-600 to-emerald-500 rounded-full font-bold text-xs tracking-wider uppercase hover:from-emerald-500 hover:to-emerald-400 active:scale-95 transition-all shadow-lg shadow-emerald-950/40 flex items-center">
                     <i class="fa fa-download mr-2"></i>UNDUH JPEG
                 </button>
             </div>
         </div>
 
         <!-- Kolom Nama Hari -->
-        <div class="grid-calendar text-center text-[10px] font-extrabold text-gray-400 mb-5 uppercase tracking-widest">
+        <div class="grid-calendar text-center text-[10px] font-extrabold text-sub-val mb-5 uppercase tracking-widest">
             <div>Minggu</div><div>Senin</div><div>Selasa</div><div>Rabu</div><div>Kamis</div><div>Jumat</div><div>Sabtu</div>
         </div>
         
@@ -110,7 +203,7 @@
 
         <div class="flex items-center gap-3 mb-5">
             <div class="w-2.5 h-6 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-full"></div>
-            <h3 class="text-lg font-bold tracking-tight text-gray-200">PAPAN INFORMASI REGU</h3>
+            <h3 class="text-lg font-bold tracking-tight text-main-val">PAPAN INFORMASI REGU</h3>
         </div>
         
         <div id="infoBoard" class="grid grid-cols-5 gap-3"></div>
@@ -137,6 +230,31 @@
             return (c % 4) + 1;
         }
 
+        function toggleTheme() {
+            const body = document.body;
+            const captureArea = document.getElementById('captureArea');
+            const icon = document.getElementById('themeIcon');
+            
+            if (body.classList.contains('light-theme')) {
+                body.classList.remove('light-theme');
+                captureArea.classList.remove('light-theme');
+                icon.className = 'fa fa-sun text-sm text-yellow-400';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                body.classList.add('light-theme');
+                captureArea.classList.add('light-theme');
+                icon.className = 'fa fa-moon text-sm text-indigo-600';
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        // Memulihkan tema tersimpan jika ada
+        if (localStorage.getItem('theme') === 'light') {
+            document.body.classList.add('light-theme');
+            document.getElementById('captureArea').classList.add('light-theme');
+            document.getElementById('themeIcon').className = 'fa fa-moon text-sm text-indigo-600';
+        }
+
         function render() {
             const grid = document.getElementById('calendarGrid'); 
             grid.innerHTML = '';
@@ -155,14 +273,14 @@
                     grid.innerHTML += `
                         <div class="day-box regu-jumat flex flex-col justify-center items-center text-center">
                             <b class="text-3xl font-extrabold tracking-tight">${d}</b>
-                            <span class="text-[9px] font-extrabold uppercase mt-2 tracking-wider text-blue-100 leading-tight">Ronda Bersama</span>
+                            <span class="text-[9px] font-extrabold uppercase mt-2 tracking-wider leading-tight">Ronda Bersama</span>
                         </div>`;
                 } else {
                     const r = reguData[getRegu(d)];
                     grid.innerHTML += `
                         <div class="day-box flex flex-col justify-center items-center text-center" style="border-left-color:${r.color}">
-                            <b class="text-3xl font-extrabold tracking-tight">${d}</b>
-                            <span class="text-[9px] font-bold opacity-70 uppercase mt-2 tracking-wider text-gray-300 leading-tight">${r.name}</span>
+                            <b class="text-3xl font-extrabold tracking-tight text-main-val">${d}</b>
+                            <span class="text-[9px] font-bold opacity-70 uppercase mt-2 tracking-wider text-sub-val leading-tight">${r.name}</span>
                         </div>`;
                 }
             }
@@ -173,14 +291,14 @@
             for(let i=1; i<=4; i++) {
                 info.innerHTML += `
                     <div class="info-card" style="border-top-color:${reguData[i].color}">
-                        <div class="font-extrabold text-xs mb-3 text-white uppercase tracking-wider">${reguData[i].name}</div>
-                        <div class="text-[10px] text-gray-400 font-medium leading-relaxed">${reguData[i].members.join('<br>')}</div>
+                        <div class="font-extrabold text-xs mb-3 text-main-val uppercase tracking-wider">${reguData[i].name}</div>
+                        <div class="text-[10px] text-sub-val font-medium leading-relaxed">${reguData[i].members.join('<br>')}</div>
                     </div>`;
             }
             info.innerHTML += `
                 <div class="info-card border-t-[5px] border-blue-500">
-                    <div class="font-extrabold text-xs mb-3 text-white uppercase tracking-wider">Semua</div>
-                    <div class="text-[10px] text-blue-300 font-bold leading-relaxed">Jumat<br><span class="text-[9px] text-blue-400 font-normal">Ronda Bersama</span></div>
+                    <div class="font-extrabold text-xs mb-3 text-main-val uppercase tracking-wider">Semua</div>
+                    <div class="text-[10px] info-card-blue-text font-bold leading-relaxed">Jumat<br><span class="text-[9px] opacity-80 font-normal">Ronda Bersama</span></div>
                 </div>`;
         }
 
@@ -190,10 +308,13 @@
             
             // Gunakan visibility: hidden agar space layout bulan & tahun tetap bertahan utuh dan tidak tergeser
             controls.style.visibility = 'hidden';
+
+            const isLightTheme = document.body.classList.contains('light-theme');
+            const captureBgColor = isLightTheme ? '#ffffff' : '#070c1a';
             
             const canvas = await html2canvas(el, { 
                 scale: 2, 
-                backgroundColor: '#070c1a', 
+                backgroundColor: captureBgColor, 
                 width: 800 
             });
             
