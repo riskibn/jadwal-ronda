@@ -19,7 +19,7 @@
             --text-sub: #9ca3af;
             --border-default: #374151;
             --shadow-capture: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(16, 185, 129, 0.03);
-            --divider-grad: linear-gradient(90deg, rgba(52, 211, 153, 0) 0%, rgba(52, 211, 153, 0.8) 50%, rgba(52, 211, 153, 0) 100%);
+            --divider-grad: linear-gradient(90deg, rgba(16, 185, 129, 0) 0%, rgba(16, 185, 129, 0.8) 50%, rgba(16, 185, 129, 0) 100%);
             --control-border: rgba(255, 255, 255, 0.1);
             --control-btn-bg: rgba(255, 255, 255, 0.05);
             --control-btn-hover: rgba(255, 255, 255, 0.1);
@@ -100,11 +100,48 @@
             border-top: 1px solid var(--border-box);
             border-right: 1px solid var(--border-box);
             color: var(--text-main);
+            position: relative;
         }
         .day-box:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 20px -10px rgba(0, 0, 0, 0.15);
         }
+        
+        /* Modern Highlight Tanggal Aktif (Hari Ini) */
+        .day-box-active-today {
+            cursor: pointer;
+            transform: scale(1.03) translateY(-2px);
+            box-shadow: 0 12px 24px -10px rgba(16, 185, 129, 0.15);
+            animation: pulse-border 2s infinite alternate;
+        }
+        .day-box-active-today::before {
+            content: "Hari Ini";
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            font-size: 8px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #10b981;
+        }
+        .pulse-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: #10b981;
+            position: absolute;
+            top: 11px;
+            right: 56px;
+            box-shadow: 0 0 8px #10b981;
+            animation: pulse-dot-anim 1.5s infinite;
+        }
+        @keyframes pulse-dot-anim {
+            0% { transform: scale(0.9); opacity: 0.6; }
+            50% { transform: scale(1.3); opacity: 1; }
+            100% { transform: scale(0.9); opacity: 0.6; }
+        }
+
         .regu-jumat { 
             background: var(--bg-jumat) !important; 
             border-left: 6px solid var(--border-jumat) !important; 
@@ -209,6 +246,41 @@
         <div id="infoBoard" class="grid grid-cols-5 gap-3"></div>
     </div>
 
+    <!-- Popup Modal Informasi Petugas Hari Ini (Luar captureArea agar tidak terunduh) -->
+    <div id="patrolModal" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 hidden opacity-0 transition-all duration-300">
+        <div class="w-[450px] bg-slate-900/90 border border-slate-700/50 rounded-3xl p-6 shadow-2xl relative transform scale-95 transition-all duration-300">
+            <!-- Close Button -->
+            <button onclick="closePatrolModal()" class="absolute top-4 right-4 w-8 h-8 bg-white/5 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition">
+                <i class="fa fa-times"></i>
+            </button>
+            
+            <!-- Modal Header -->
+            <div class="flex items-center gap-3.5 mb-5 border-b border-slate-700/40 pb-4">
+                <div id="modalThemeBadge" class="w-12 h-12 rounded-full flex items-center justify-center text-white text-xl shadow-lg">
+                    <i class="fa fa-shield-halved"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-extrabold text-white tracking-tight" id="modalReguTitle">Regu Bertugas</h3>
+                    <p class="text-xs text-slate-400 mt-0.5" id="modalPatrolDate"></p>
+                </div>
+            </div>
+
+            <!-- Modal Content -->
+            <div class="space-y-4">
+                <div class="bg-slate-950/40 border border-slate-800/80 rounded-2xl p-4">
+                    <p class="text-[10px] text-slate-400 font-extrabold tracking-wider uppercase mb-3">Daftar Anggota Petugas Piket Malam</p>
+                    <div id="modalMemberList" class="space-y-2.5">
+                        <!-- Names appended here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end">
+                <button onclick="closePatrolModal()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider transition">Tutup Detail</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let date = new Date();
         const epochDate = new Date(2026, 0, 1);
@@ -283,9 +355,10 @@
 
                 if(cur.getDay() === 5) {
                     if (isTodayActive) {
-                        // Highlight Hari Jumat Aktif (Ronda Bersama) di Web
+                        // Highlight Hari Jumat Aktif (Ronda Bersama) di Web - Menggunakan Soft Glow & Pulse
                         grid.innerHTML += `
-                            <div class="day-box regu-jumat flex flex-col justify-center items-center text-center scale-[1.04] z-10 shadow-xl ring-4 ring-blue-400/50">
+                            <div onclick="openPatrolModal('jumat', ${d})" class="day-box regu-jumat day-box-active-today">
+                                <span class="pulse-dot"></span>
                                 <b class="text-3xl font-extrabold tracking-tight text-white">${d}</b>
                                 <span class="text-[9px] font-extrabold uppercase mt-2 tracking-wider leading-tight text-blue-100">Ronda Bersama</span>
                             </div>`;
@@ -298,14 +371,16 @@
                             </div>`;
                     }
                 } else {
-                    const r = reguData[getRegu(d)];
+                    const reguIndex = getRegu(d);
+                    const r = reguData[reguIndex];
                     if (isTodayActive) {
-                        // Highlight Regu Aktif di Web: Menggunakan Blok Warna Penuh sesuai Warna Regu, Efek Glow & Zoom Lembut
+                        // Highlight Hari Regu Aktif di Web - Desain Soft Glow Border, Pulse Dot & Tag Hari Ini (Lebih Premium & Clickable)
                         grid.innerHTML += `
-                            <div class="day-box flex flex-col justify-center items-center text-center scale-[1.04] z-10 shadow-xl border-l-0" 
-                                 style="background: ${r.color} !important; border: 2.5px solid rgba(255, 255, 255, 0.45) !important; box-shadow: 0 10px 25px -5px ${r.color}66;">
-                                <b class="text-3xl font-extrabold tracking-tight text-white">${d}</b>
-                                <span class="text-[9px] font-extrabold uppercase mt-2 tracking-wider leading-tight text-white opacity-95">${r.name}</span>
+                            <div onclick="openPatrolModal(${reguIndex}, ${d})" class="day-box day-box-active-today" 
+                                 style="border-color:${r.color}; border-width: 2px; border-left-width: 6px; background: rgba(255,255,255,0.06);">
+                                <span class="pulse-dot"></span>
+                                <b class="text-3xl font-extrabold tracking-tight text-main-val">${d}</b>
+                                <span class="text-[9px] font-bold opacity-90 uppercase mt-2 tracking-wider leading-tight text-emerald-400">${r.name}</span>
                             </div>`;
                     } else {
                         // Hari Regu Biasa (Hanya Strip Samping)
@@ -335,14 +410,84 @@
                 </div>`;
         }
 
+        // Kontrol Popup Modal
+        window.openPatrolModal = function(regu, dayNum) {
+            const modal = document.getElementById('patrolModal');
+            const title = document.getElementById('modalReguTitle');
+            const badge = document.getElementById('modalThemeBadge');
+            const dateStr = document.getElementById('modalPatrolDate');
+            const list = document.getElementById('modalMemberList');
+
+            // Format tanggal pop up
+            const tempDate = new Date();
+            const formattedDate = tempDate.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+            dateStr.innerText = formattedDate;
+
+            list.innerHTML = '';
+
+            if (regu === 'jumat') {
+                title.innerText = "Ronda Bersama (Semua Warga)";
+                badge.style.backgroundColor = '#2563eb';
+                badge.style.boxShadow = '0 0 15px rgba(37, 99, 235, 0.4)';
+                
+                // Tampilkan semua warga bergabung
+                const allMembers = [];
+                Object.values(reguData).forEach(r => allMembers.push(...r.members));
+                const uniqueMembers = [...new Set(allMembers)];
+
+                uniqueMembers.forEach(name => {
+                    list.innerHTML += `
+                        <div class="flex items-center gap-3 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/50">
+                            <div class="w-2.5 h-2.5 rounded-full bg-blue-500"></div>
+                            <span class="text-sm font-semibold text-slate-200 tracking-wide">${name}</span>
+                        </div>`;
+                });
+            } else {
+                const r = reguData[regu];
+                title.innerText = `Petugas Piket ${r.name}`;
+                badge.style.backgroundColor = r.color;
+                badge.style.boxShadow = `0 0 15px ${r.color}60`;
+
+                r.members.forEach(name => {
+                    list.innerHTML += `
+                        <div class="flex items-center gap-3 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/50">
+                            <div class="w-2.5 h-2.5 rounded-full" style="background-color: ${r.color}"></div>
+                            <span class="text-sm font-semibold text-slate-200 tracking-wide">${name}</span>
+                        </div>`;
+                });
+            }
+
+            // Tampilkan Modal dengan Transisi Mulus
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.firstElementChild.classList.remove('scale-95');
+                modal.firstElementChild.classList.add('scale-100');
+            }, 10);
+        };
+
+        window.closePatrolModal = function() {
+            const modal = document.getElementById('patrolModal');
+            modal.classList.add('opacity-0');
+            modal.firstElementChild.classList.replace('scale-100', 'scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        };
+
+        // Klik di luar area modal untuk menutup modal
+        document.getElementById('patrolModal').addEventListener('click', function(e) {
+            if (e.target === this) closePatrolModal();
+        });
+
         async function downloadImage() {
             const el = document.getElementById('captureArea');
             const controls = document.getElementById('controls');
             
-            // 1. Sembunyikan kontrol
+            // 1. Sembunyikan kontrol navigasi
             controls.style.visibility = 'hidden';
 
-            // 2. Re-render tanpa highlight tanggal aktif sekarang agar hasil cetak JPEG bersih & normal
+            // 2. Re-render tanpa highlight tanggal aktif sekarang agar hasil cetak JPEG bersih & seragam
             render(true);
 
             const isLightTheme = document.body.classList.contains('light-theme');
