@@ -88,9 +88,11 @@
         <!-- Garis Pemisah Estetis -->
         <div class="divider-line"></div>
 
-        <div class="flex justify-between items-center mb-8" id="controls">
+        <!-- Struktur layout baru: Memisahkan Header Bulan dari Tombol Aksi Kontrol -->
+        <div class="flex justify-between items-center mb-8">
             <h2 id="monthTitle" class="text-2xl font-bold tracking-tight text-gray-100"></h2>
-            <div class="flex gap-3">
+            
+            <div class="flex gap-3" id="controls">
                 <button onclick="changeMonth(-1)" class="w-10 h-10 bg-white/5 hover:bg-white/10 active:scale-95 transition rounded-full flex items-center justify-center border border-white/10"><i class="fa fa-chevron-left text-sm text-gray-300"></i></button>
                 <button onclick="changeMonth(1)" class="w-10 h-10 bg-white/5 hover:bg-white/10 active:scale-95 transition rounded-full flex items-center justify-center border border-white/10"><i class="fa fa-chevron-right text-sm text-gray-300"></i></button>
                 <button onclick="downloadImage()" class="px-6 py-2 bg-gradient-to-r from-emerald-600 to-emerald-500 rounded-full font-bold text-xs tracking-wider uppercase hover:from-emerald-500 hover:to-emerald-400 active:scale-95 transition-all shadow-lg shadow-emerald-950/40">
@@ -99,15 +101,18 @@
             </div>
         </div>
 
+        <!-- Kolom Nama Hari -->
         <div class="grid-calendar text-center text-[10px] font-extrabold text-gray-400 mb-5 uppercase tracking-widest">
             <div>Minggu</div><div>Senin</div><div>Selasa</div><div>Rabu</div><div>Kamis</div><div>Jumat</div><div>Sabtu</div>
         </div>
+        
         <div id="calendarGrid" class="grid-calendar mb-10"></div>
 
         <div class="flex items-center gap-3 mb-5">
             <div class="w-2.5 h-6 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-full"></div>
             <h3 class="text-lg font-bold tracking-tight text-gray-200">PAPAN INFORMASI REGU</h3>
         </div>
+        
         <div id="infoBoard" class="grid grid-cols-5 gap-3"></div>
     </div>
 
@@ -121,49 +126,92 @@
             4: { name: 'Regu 4', members: ['ZAINU', 'MOELYADI', 'GILANG', 'DADAN', 'TAUFIQ'], color: '#a855f7' }
         };
 
+        // Mengembalikan nomor regu bertugas untuk hari tertentu (mengabaikan Jumat)
         function getRegu(d) {
-            let c = 0; let t = new Date(epochDate);
-            while(t < new Date(date.getFullYear(), date.getMonth(), d)) { if(t.getDay() !== 5) c++; t.setDate(t.getDate()+1); }
+            let c = 0; 
+            let t = new Date(epochDate);
+            while(t < new Date(date.getFullYear(), date.getMonth(), d)) { 
+                if(t.getDay() !== 5) c++; 
+                t.setDate(t.getDate()+1); 
+            }
             return (c % 4) + 1;
         }
 
         function render() {
-            const grid = document.getElementById('calendarGrid'); grid.innerHTML = '';
+            const grid = document.getElementById('calendarGrid'); 
+            grid.innerHTML = '';
             document.getElementById('monthTitle').innerText = date.toLocaleString('id-ID', {month:'long', year:'numeric'}).toUpperCase();
+            
             const days = new Date(date.getFullYear(), date.getMonth()+1, 0).getDate();
             const first = new Date(date.getFullYear(), date.getMonth(), 1).getDay();
             
+            // Render kotak kosong untuk offset hari pertama awal bulan
             for(let i=0; i<first; i++) grid.innerHTML += '<div></div>';
+            
+            // Perulangan hari dalam sebulan
             for(let d=1; d<=days; d++) {
                 const cur = new Date(date.getFullYear(), date.getMonth(), d);
                 if(cur.getDay() === 5) {
-                    grid.innerHTML += `<div class="day-box regu-jumat"><b class="text-3xl font-extrabold tracking-tight">${d}</b><span class="text-[9px] font-extrabold uppercase mt-2 tracking-wider text-blue-100 text-center max-w-[90%] leading-tight">Ronda Bersama</span></div>`;
+                    grid.innerHTML += `
+                        <div class="day-box regu-jumat flex flex-col justify-center items-center text-center">
+                            <b class="text-3xl font-extrabold tracking-tight">${d}</b>
+                            <span class="text-[9px] font-extrabold uppercase mt-2 tracking-wider text-blue-100 leading-tight">Ronda Bersama</span>
+                        </div>`;
                 } else {
                     const r = reguData[getRegu(d)];
-                    grid.innerHTML += `<div class="day-box" style="border-left-color:${r.color}"><b class="text-3xl font-extrabold tracking-tight">${d}</b><span class="text-[9px] font-bold opacity-70 uppercase mt-2 tracking-wider text-gray-300 text-center max-w-[90%] leading-tight">${r.name}</span></div>`;
+                    grid.innerHTML += `
+                        <div class="day-box flex flex-col justify-center items-center text-center" style="border-left-color:${r.color}">
+                            <b class="text-3xl font-extrabold tracking-tight">${d}</b>
+                            <span class="text-[9px] font-bold opacity-70 uppercase mt-2 tracking-wider text-gray-300 leading-tight">${r.name}</span>
+                        </div>`;
                 }
             }
-            const info = document.getElementById('infoBoard'); info.innerHTML = '';
-            for(let i=1; i<=4; i++) info.innerHTML += `<div class="info-card" style="border-top-color:${reguData[i].color}"><div class="font-extrabold text-xs mb-3 text-white uppercase tracking-wider">${reguData[i].name}</div><div class="text-[10px] text-gray-400 font-medium leading-relaxed">${reguData[i].members.join('<br>')}</div></div>`;
-            info.innerHTML += `<div class="info-card border-t-[5px] border-blue-500"><div class="font-extrabold text-xs mb-3 text-white uppercase tracking-wider">Semua</div><div class="text-[10px] text-blue-300 font-bold leading-relaxed">Jumat<br><span class="text-[9px] text-blue-400 font-normal">Ronda Bersama</span></div></div>`;
+            
+            // Render Papan Informasi Anggota
+            const info = document.getElementById('infoBoard'); 
+            info.innerHTML = '';
+            for(let i=1; i<=4; i++) {
+                info.innerHTML += `
+                    <div class="info-card" style="border-top-color:${reguData[i].color}">
+                        <div class="font-extrabold text-xs mb-3 text-white uppercase tracking-wider">${reguData[i].name}</div>
+                        <div class="text-[10px] text-gray-400 font-medium leading-relaxed">${reguData[i].members.join('<br>')}</div>
+                    </div>`;
+            }
+            info.innerHTML += `
+                <div class="info-card border-t-[5px] border-blue-500">
+                    <div class="font-extrabold text-xs mb-3 text-white uppercase tracking-wider">Semua</div>
+                    <div class="text-[10px] text-blue-300 font-bold leading-relaxed">Jumat<br><span class="text-[9px] text-blue-400 font-normal">Ronda Bersama</span></div>
+                </div>`;
         }
 
         async function downloadImage() {
             const el = document.getElementById('captureArea');
             const controls = document.getElementById('controls');
-            controls.style.display = 'none';
             
-            const canvas = await html2canvas(el, { scale: 2, backgroundColor: '#070c1a', width: 800 });
+            // Gunakan visibility: hidden agar space layout bulan & tahun tetap bertahan utuh dan tidak tergeser
+            controls.style.visibility = 'hidden';
+            
+            const canvas = await html2canvas(el, { 
+                scale: 2, 
+                backgroundColor: '#070c1a', 
+                width: 800 
+            });
             
             canvas.toBlob(blob => {
                 const a = document.createElement('a'); 
                 a.href = URL.createObjectURL(blob); 
-                a.download = `Jadwal_Ronda_${date.toLocaleString('id-ID', {month:'long'})}.jpg`; 
+                a.download = `Jadwal_Ronda_${date.toLocaleString('id-ID', {month:'long', year:'numeric'}).replace(' ', '_')}.jpg`; 
                 a.click();
-                controls.style.display = 'flex';
+                controls.style.visibility = 'visible';
             }, 'image/jpeg', 1.0);
         }
-        function changeMonth(m) { date.setMonth(date.getMonth() + m); render(); }
+        
+        function changeMonth(m) { 
+            date.setMonth(date.getMonth() + m); 
+            render(); 
+        }
+        
+        // Memulai inisialisasi pertama saat aplikasi dibuka
         render();
     </script>
 </body>
