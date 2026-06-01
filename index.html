@@ -19,7 +19,7 @@
             --text-sub: #9ca3af;
             --border-default: #374151;
             --shadow-capture: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(16, 185, 129, 0.03);
-            --divider-grad: linear-gradient(90deg, rgba(16, 185, 129, 0) 0%, rgba(16, 185, 129, 0.8) 50%, rgba(16, 185, 129, 0) 100%);
+            --divider-grad: linear-gradient(90deg, rgba(52, 211, 153, 0) 0%, rgba(52, 211, 153, 0.8) 50%, rgba(52, 211, 153, 0) 100%);
             --control-border: rgba(255, 255, 255, 0.1);
             --control-btn-bg: rgba(255, 255, 255, 0.05);
             --control-btn-hover: rgba(255, 255, 255, 0.1);
@@ -64,6 +64,7 @@
             background: var(--bg-body); 
             font-family: 'Plus Jakarta Sans', sans-serif; 
             display: flex; 
+            flex-direction: column;
             justify-content: center; 
             align-items: center; 
             min-height: 100vh;
@@ -71,6 +72,7 @@
             margin: 0;
             padding: 40px 0;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
         }
         #captureArea { 
             width: 800px; 
@@ -203,6 +205,7 @@
 </head>
 <body class="text-white">
 
+    <!-- Area Tangkapan Gambar -->
     <div id="captureArea">
         <div class="text-center mb-6">
             <h1 class="text-4xl font-extrabold tracking-wider text-main-val main-title">JADWAL RONDA FLAMBOYAN</h1>
@@ -236,6 +239,7 @@
             <div>Minggu</div><div>Senin</div><div>Selasa</div><div>Rabu</div><div>Kamis</div><div>Jumat</div><div>Sabtu</div>
         </div>
         
+        <!-- Grid Kalender -->
         <div id="calendarGrid" class="grid-calendar mb-10"></div>
 
         <div class="flex items-center gap-3 mb-5">
@@ -243,10 +247,115 @@
             <h3 class="text-lg font-bold tracking-tight text-main-val">PAPAN INFORMASI REGU</h3>
         </div>
         
+        <!-- Papan Anggota -->
         <div id="infoBoard" class="grid grid-cols-5 gap-3"></div>
     </div>
 
-    <!-- Popup Modal Informasi Petugas Hari Ini (Luar captureArea agar tidak terunduh) -->
+    <!-- Floating Admin Group Button (Di luar captureArea agar tidak terunduh) -->
+    <div class="fixed bottom-6 right-6 flex flex-col items-end gap-3 z-40">
+        <!-- Badge Admin Aktif -->
+        <div id="adminBadge" class="hidden bg-emerald-500 text-slate-950 font-extrabold text-[10px] px-3 py-1 rounded-full shadow-lg tracking-wider uppercase flex items-center gap-1.5 animate-pulse">
+            <i class="fa fa-circle text-[7px]"></i> Admin Mode Aktif
+        </div>
+        
+        <div class="flex gap-2">
+            <button id="logoutBtn" onclick="logoutAdmin()" class="hidden w-12 h-12 bg-red-600 hover:bg-red-500 text-white rounded-full flex items-center justify-center shadow-2xl transition active:scale-95" title="Keluar Admin">
+                <i class="fa fa-sign-out-alt text-lg"></i>
+            </button>
+            <button id="adminPanelBtn" onclick="handleAdminBtnClick()" class="w-14 h-14 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 hover:rotate-12 active:scale-95" title="Menu Admin">
+                <i id="adminBtnIcon" class="fa fa-lock text-xl"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal Login Admin -->
+    <div id="loginModal" class="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-50 hidden opacity-0 transition-all duration-300">
+        <div class="w-[400px] bg-slate-900/90 border border-slate-700/50 rounded-3xl p-6 shadow-2xl transform scale-95 transition-all duration-300 relative">
+            <button onclick="closeLoginModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition"><i class="fa fa-times"></i></button>
+            <div class="text-center mb-6">
+                <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white mx-auto mb-3 shadow-lg shadow-blue-900/40">
+                    <i class="fa fa-shield-halved text-lg"></i>
+                </div>
+                <h3 class="text-xl font-extrabold tracking-tight">Login Admin Flamboyan</h3>
+                <p class="text-xs text-slate-400 mt-1">Gunakan kredensial pengurus RT untuk masuk</p>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1.5">Username</label>
+                    <input type="text" id="adminUser" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition" placeholder="Masukkan username">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1.5">Password</label>
+                    <input type="password" id="adminPass" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition" placeholder="••••••••">
+                </div>
+                <!-- Notifikasi Error Kustom -->
+                <p id="loginError" class="text-xs text-red-400 font-bold hidden text-center"><i class="fa fa-circle-exclamation mr-1"></i> Username atau password salah!</p>
+                
+                <button onclick="submitLogin()" class="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg active:scale-95 transition">Masuk Panel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Panel Admin Grup -->
+    <div id="adminPanelModal" class="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-50 hidden opacity-0 transition-all duration-300">
+        <div class="w-[500px] bg-slate-900/95 border border-slate-700/50 rounded-3xl p-6 shadow-2xl transform scale-95 transition-all duration-300 relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeAdminPanel()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition"><i class="fa fa-times"></i></button>
+            
+            <div class="flex items-center gap-3 mb-6 border-b border-slate-800 pb-4">
+                <div class="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-slate-950 text-md shadow-lg shadow-emerald-500/20">
+                    <i class="fa fa-sliders"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-extrabold tracking-tight text-white">Dashboard Admin Ronda</h3>
+                    <p class="text-xs text-slate-400">Atur anggota regu dan giliran denda/piket</p>
+                </div>
+            </div>
+
+            <!-- Bagian 1: Tambah Anggota Baru -->
+            <div class="bg-slate-950/50 border border-slate-800/80 rounded-2xl p-4 mb-5">
+                <h4 class="text-xs font-extrabold text-slate-200 tracking-wider uppercase mb-3 flex items-center gap-2"><i class="fa fa-user-plus text-emerald-400"></i> Tambah Anggota Baru</h4>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                        <label class="block text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">Pilih Regu</label>
+                        <select id="memberReguSelect" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"></select>
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">Nama Anggota</label>
+                        <input type="text" id="memberNameInput" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 uppercase" placeholder="CONTOH: BUDI">
+                    </div>
+                </div>
+                <button onclick="addNewMember()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-xs font-bold uppercase tracking-wider transition">Simpan Anggota</button>
+            </div>
+
+            <!-- Bagian 2: Tambah Regu Baru -->
+            <div class="bg-slate-950/50 border border-slate-800/80 rounded-2xl p-4 mb-5">
+                <h4 class="text-xs font-extrabold text-slate-200 tracking-wider uppercase mb-3 flex items-center gap-2"><i class="fa fa-users-rectangle text-blue-400"></i> Buat Regu Baru</h4>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                        <label class="block text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">Nama Regu</label>
+                        <input type="text" id="reguNameInput" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 uppercase" placeholder="CONTOH: REGU 5">
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">Warna Identitas</label>
+                        <div class="flex gap-2 items-center h-8">
+                            <input type="color" id="reguColorInput" value="#ec4899" class="bg-transparent border-0 cursor-pointer w-8 h-8 rounded-full overflow-hidden">
+                            <span class="text-[10px] text-slate-400">Klik palet warna</span>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="addNewRegu()" class="w-full py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-xs font-bold uppercase tracking-wider transition">Buat & Konfigurasi</button>
+            </div>
+
+            <!-- Bagian 3: Daftar Nama & Pengaturan Penghapusan -->
+            <div class="bg-slate-950/30 border border-slate-800/40 rounded-2xl p-4">
+                <h4 class="text-xs font-extrabold text-slate-400 tracking-wider uppercase mb-3"><i class="fa fa-trash-can mr-1.5"></i>Kelola Personel Aktif</h4>
+                <div id="adminManageList" class="space-y-3.5 max-h-[220px] overflow-y-auto pr-1"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popup Modal Informasi Petugas Hari Ini -->
     <div id="patrolModal" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 hidden opacity-0 transition-all duration-300">
         <div class="w-[450px] bg-slate-900/90 border border-slate-700/50 rounded-3xl p-6 shadow-2xl relative transform scale-95 transition-all duration-300">
             <!-- Close Button -->
@@ -269,9 +378,7 @@
             <div class="space-y-4">
                 <div class="bg-slate-950/40 border border-slate-800/80 rounded-2xl p-4">
                     <p class="text-[10px] text-slate-400 font-extrabold tracking-wider uppercase mb-3">Daftar Anggota Petugas Piket Malam</p>
-                    <div id="modalMemberList" class="space-y-2.5">
-                        <!-- Names appended here -->
-                    </div>
+                    <div id="modalMemberList" class="space-y-2.5"></div>
                 </div>
             </div>
 
@@ -284,22 +391,65 @@
     <script>
         let date = new Date();
         const epochDate = new Date(2026, 0, 1);
+        let isAdminLoggedIn = false;
+
+        // Reactive State Data Regu & Anggota (Setiap regu diberi timestamp awal agar rotasi stabil)
         const reguData = {
-            1: { name: 'Regu 1', members: ['DIKA', 'RIDWAN', 'BUNYAMIN', 'YAM', 'HELMI'], color: '#f97316' },
-            2: { name: 'Regu 2', members: ['DEDE', 'CECEP', 'WAHYU', 'REDI', 'BANGBANG'], color: '#22c55e' },
-            3: { name: 'Regu 3', members: ['DANI', 'YUDAN', 'HERI', 'RAMADHAN', 'RISKI'], color: '#eab308' },
-            4: { name: 'Regu 4', members: ['ZAINU', 'MOELYADI', 'GILANG', 'DADAN', 'TAUFIQ'], color: '#a855f7' }
+            1: { name: 'Regu 1', members: ['DIKA', 'RIDWAN', 'BUNYAMIN', 'YAM', 'HELMI'], color: '#f97316', createdAt: '2026-01-01T00:00:00.000Z' },
+            2: { name: 'Regu 2', members: ['DEDE', 'CECEP', 'WAHYU', 'REDI', 'BANGBANG'], color: '#22c55e', createdAt: '2026-01-01T00:00:00.000Z' },
+            3: { name: 'Regu 3', members: ['DANI', 'YUDAN', 'HERI', 'RAMADHAN', 'RISKI'], color: '#eab308', createdAt: '2026-01-01T00:00:00.000Z' },
+            4: { name: 'Regu 4', members: ['ZAINU', 'MOELYADI', 'GILANG', 'DADAN', 'TAUFIQ'], color: '#a855f7', createdAt: '2026-01-01T00:00:00.000Z' }
         };
 
-        // Mengembalikan nomor regu bertugas untuk hari tertentu (mengabaikan Jumat)
+        // Mengembalikan nomor regu bertugas untuk hari tertentu secara dinamis dan kronologis stabil
         function getRegu(d) {
-            let c = 0; 
-            let t = new Date(epochDate);
-            while(t < new Date(date.getFullYear(), date.getMonth(), d)) { 
-                if(t.getDay() !== 5) c++; 
-                t.setDate(t.getDate()+1); 
+            const target = new Date(date.getFullYear(), date.getMonth(), d);
+            target.setHours(0, 0, 0, 0);
+
+            let current = new Date(epochDate);
+            current.setHours(0, 0, 0, 0);
+
+            let pool = [];
+            let pointer = 0;
+
+            // Simulasi hari demi hari untuk menjaga konsistensi urutan
+            while (current <= target) {
+                // Saring regu-regu yang sudah aktif pada tanggal simulasi ini
+                const availableKeys = Object.keys(reguData).filter(key => {
+                    const regu = reguData[key];
+                    const created = regu.createdAt ? new Date(regu.createdAt) : epochDate;
+                    created.setHours(0, 0, 0, 0);
+                    return created <= current;
+                }).sort((a, b) => Number(a) - Number(b));
+
+                // Jika ada penambahan regu baru (pool berubah), sisipkan ke urutan tanpa merusak pointer saat ini
+                if (JSON.stringify(pool) !== JSON.stringify(availableKeys)) {
+                    const lastAssignedKey = pool[pointer];
+                    pool = availableKeys;
+                    const newIdx = pool.indexOf(lastAssignedKey);
+                    if (newIdx !== -1) {
+                        pointer = newIdx;
+                    } else {
+                        pointer = 0;
+                    }
+                }
+
+                // Giliran berputar di luar hari Jumat
+                if (current.getDay() !== 5) {
+                    if (pool.length > 0) {
+                        if (current.getTime() !== epochDate.getTime()) {
+                            pointer = (pointer + 1) % pool.length;
+                        }
+                    }
+                }
+
+                if (current.getTime() === target.getTime()) {
+                    break;
+                }
+                current.setDate(current.getDate() + 1);
             }
-            return (c % 4) + 1;
+
+            return pool[pointer] || null;
         }
 
         function toggleTheme() {
@@ -320,7 +470,6 @@
             }
         }
 
-        // Memulihkan tema tersimpan jika ada
         if (localStorage.getItem('theme') === 'light') {
             document.body.classList.add('light-theme');
             document.getElementById('captureArea').classList.add('light-theme');
@@ -335,19 +484,17 @@
             const days = new Date(date.getFullYear(), date.getMonth()+1, 0).getDate();
             const first = new Date(date.getFullYear(), date.getMonth(), 1).getDay();
             
-            // Dapatkan waktu riil hari ini untuk validasi highlight
             const realToday = new Date();
             const currentYear = date.getFullYear();
             const currentMonth = date.getMonth();
 
-            // Render kotak kosong untuk offset hari pertama awal bulan
             for(let i=0; i<first; i++) grid.innerHTML += '<div></div>';
             
-            // Perulangan hari dalam sebulan
+            const keys = Object.keys(reguData);
+
             for(let d=1; d<=days; d++) {
                 const cur = new Date(currentYear, currentMonth, d);
                 
-                // Cek apakah tanggal hari ini sedang aktif (sama dengan tanggal riil) dan tidak sedang dalam mode unduh
                 const isTodayActive = !excludeHighlight && 
                                      realToday.getDate() === d && 
                                      realToday.getMonth() === currentMonth && 
@@ -355,39 +502,45 @@
 
                 if(cur.getDay() === 5) {
                     if (isTodayActive) {
-                        // Highlight Hari Jumat Aktif (Ronda Bersama) di Web - Menggunakan Soft Glow & Pulse
                         grid.innerHTML += `
                             <div onclick="openPatrolModal('jumat', ${d})" class="day-box regu-jumat day-box-active-today">
                                 <span class="pulse-dot"></span>
                                 <b class="text-3xl font-extrabold tracking-tight text-white">${d}</b>
-                                <span class="text-[9px] font-extrabold uppercase mt-2 tracking-wider leading-tight text-blue-100">Ronda Bersama</span>
+                                <span class="text-[9px] font-extrabold uppercase mt-2 tracking-wider leading-tight text-blue-100 text-center">Ronda Bersama</span>
                             </div>`;
                     } else {
-                        // Hari Jumat Biasa
                         grid.innerHTML += `
                             <div class="day-box regu-jumat flex flex-col justify-center items-center text-center">
                                 <b class="text-3xl font-extrabold tracking-tight">${d}</b>
-                                <span class="text-[9px] font-extrabold uppercase mt-2 tracking-wider leading-tight">Ronda Bersama</span>
+                                <span class="text-[9px] font-extrabold uppercase mt-2 tracking-wider leading-tight text-center">Ronda Bersama</span>
                             </div>`;
                     }
                 } else {
                     const reguIndex = getRegu(d);
                     const r = reguData[reguIndex];
-                    if (isTodayActive) {
-                        // Highlight Hari Regu Aktif di Web - Desain Soft Glow Border, Pulse Dot & Tag Hari Ini (Lebih Premium & Clickable)
+                    
+                    if (!r) {
                         grid.innerHTML += `
-                            <div onclick="openPatrolModal(${reguIndex}, ${d})" class="day-box day-box-active-today" 
+                            <div class="day-box flex flex-col justify-center items-center text-center">
+                                <b class="text-3xl font-extrabold tracking-tight text-main-val">${d}</b>
+                                <span class="text-[9px] font-bold opacity-40 uppercase mt-2">Kosong</span>
+                            </div>`;
+                        continue;
+                    }
+
+                    if (isTodayActive) {
+                        grid.innerHTML += `
+                            <div onclick="openPatrolModal('${reguIndex}', ${d})" class="day-box day-box-active-today" 
                                  style="border-color:${r.color}; border-width: 2px; border-left-width: 6px; background: rgba(255,255,255,0.06);">
                                 <span class="pulse-dot"></span>
                                 <b class="text-3xl font-extrabold tracking-tight text-main-val">${d}</b>
-                                <span class="text-[9px] font-bold opacity-90 uppercase mt-2 tracking-wider leading-tight text-emerald-400">${r.name}</span>
+                                <span class="text-[9px] font-bold opacity-90 uppercase mt-2 tracking-wider leading-tight text-center" style="color: ${r.color}">${r.name}</span>
                             </div>`;
                     } else {
-                        // Hari Regu Biasa (Hanya Strip Samping)
                         grid.innerHTML += `
                             <div class="day-box flex flex-col justify-center items-center text-center" style="border-left-color:${r.color}">
                                 <b class="text-3xl font-extrabold tracking-tight text-main-val">${d}</b>
-                                <span class="text-[9px] font-bold opacity-70 uppercase mt-2 tracking-wider text-sub-val leading-tight">${r.name}</span>
+                                <span class="text-[9px] font-bold opacity-70 uppercase mt-2 tracking-wider text-sub-val leading-tight text-center">${r.name}</span>
                             </div>`;
                     }
                 }
@@ -396,21 +549,38 @@
             // Render Papan Informasi Anggota
             const info = document.getElementById('infoBoard'); 
             info.innerHTML = '';
-            for(let i=1; i<=4; i++) {
-                info.innerHTML += `
-                    <div class="info-card" style="border-top-color:${reguData[i].color}">
-                        <div class="font-extrabold text-xs mb-3 text-main-val uppercase tracking-wider">${reguData[i].name}</div>
-                        <div class="text-[10px] text-sub-val font-medium leading-relaxed">${reguData[i].members.join('<br>')}</div>
-                    </div>`;
+            
+            // Menghitung kolom grid dinamis untuk papan informasi agar tetap rapi
+            const totalBoardCards = keys.length + 1;
+            info.className = `grid gap-3`;
+            if (totalBoardCards <= 3) {
+                info.style.gridTemplateColumns = `repeat(${totalBoardCards}, minmax(0, 1fr))`;
+            } else {
+                info.style.gridTemplateColumns = `repeat(5, minmax(0, 1fr))`;
             }
+
+            keys.forEach(key => {
+                const r = reguData[key];
+                info.innerHTML += `
+                    <div class="info-card" style="border-top-color:${r.color}">
+                        <div class="font-extrabold text-xs mb-3 text-main-val uppercase tracking-wider">${r.name}</div>
+                        <div class="text-[10px] text-sub-val font-medium leading-relaxed">${r.members.length > 0 ? r.members.join('<br>') : '<span class="italic text-slate-500">Belum ada anggota</span>'}</div>
+                    </div>`;
+            });
+
+            // Jumat/Ronda Bersama Card
             info.innerHTML += `
                 <div class="info-card border-t-[5px] border-blue-500">
                     <div class="font-extrabold text-xs mb-3 text-main-val uppercase tracking-wider">Semua</div>
                     <div class="text-[10px] info-card-blue-text font-bold leading-relaxed">Jumat<br><span class="text-[9px] opacity-80 font-normal">Ronda Bersama</span></div>
                 </div>`;
+            
+            // Sinkronisasi isian pilihan dropdown & panel kelola admin
+            populateAdminDropdowns();
+            renderAdminManageList();
         }
 
-        // Kontrol Popup Modal
+        // Kontrol Popup Modal Anggota
         window.openPatrolModal = function(regu, dayNum) {
             const modal = document.getElementById('patrolModal');
             const title = document.getElementById('modalReguTitle');
@@ -430,34 +600,41 @@
                 badge.style.backgroundColor = '#2563eb';
                 badge.style.boxShadow = '0 0 15px rgba(37, 99, 235, 0.4)';
                 
-                // Tampilkan semua warga bergabung
                 const allMembers = [];
                 Object.values(reguData).forEach(r => allMembers.push(...r.members));
                 const uniqueMembers = [...new Set(allMembers)];
 
-                uniqueMembers.forEach(name => {
-                    list.innerHTML += `
-                        <div class="flex items-center gap-3 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/50">
-                            <div class="w-2.5 h-2.5 rounded-full bg-blue-500"></div>
-                            <span class="text-sm font-semibold text-slate-200 tracking-wide">${name}</span>
-                        </div>`;
-                });
+                if (uniqueMembers.length === 0) {
+                    list.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-2">Belum ada warga terdaftar.</p>`;
+                } else {
+                    uniqueMembers.forEach(name => {
+                        list.innerHTML += `
+                            <div class="flex items-center gap-3 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/50">
+                                <div class="w-2.5 h-2.5 rounded-full bg-blue-500"></div>
+                                <span class="text-sm font-semibold text-slate-200 tracking-wide">${name}</span>
+                            </div>`;
+                    });
+                }
             } else {
                 const r = reguData[regu];
+                if (!r) return;
                 title.innerText = `Petugas Piket ${r.name}`;
                 badge.style.backgroundColor = r.color;
                 badge.style.boxShadow = `0 0 15px ${r.color}60`;
 
-                r.members.forEach(name => {
-                    list.innerHTML += `
-                        <div class="flex items-center gap-3 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/50">
-                            <div class="w-2.5 h-2.5 rounded-full" style="background-color: ${r.color}"></div>
-                            <span class="text-sm font-semibold text-slate-200 tracking-wide">${name}</span>
-                        </div>`;
-                });
+                if (r.members.length === 0) {
+                    list.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-2">Belum ada anggota piket terdaftar.</p>`;
+                } else {
+                    r.members.forEach(name => {
+                        list.innerHTML += `
+                            <div class="flex items-center gap-3 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/50">
+                                <div class="w-2.5 h-2.5 rounded-full" style="background-color: ${r.color}"></div>
+                                <span class="text-sm font-semibold text-slate-200 tracking-wide">${name}</span>
+                            </div>`;
+                    });
+                }
             }
 
-            // Tampilkan Modal dengan Transisi Mulus
             modal.classList.remove('hidden');
             setTimeout(() => {
                 modal.classList.remove('opacity-0');
@@ -475,32 +652,208 @@
             }, 300);
         };
 
-        // Klik di luar area modal untuk menutup modal
         document.getElementById('patrolModal').addEventListener('click', function(e) {
             if (e.target === this) closePatrolModal();
         });
 
+        // Fitur Autentikasi Admin & Management Control
+        function handleAdminBtnClick() {
+            if (isAdminLoggedIn) {
+                openAdminPanel();
+            } else {
+                openLoginModal();
+            }
+        }
+
+        function openLoginModal() {
+            const modal = document.getElementById('loginModal');
+            document.getElementById('adminUser').value = '';
+            document.getElementById('adminPass').value = '';
+            document.getElementById('loginError').classList.add('hidden');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.firstElementChild.classList.replace('scale-95', 'scale-100');
+            }, 10);
+        }
+
+        function closeLoginModal() {
+            const modal = document.getElementById('loginModal');
+            modal.classList.add('opacity-0');
+            modal.firstElementChild.classList.replace('scale-100', 'scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        function submitLogin() {
+            const user = document.getElementById('adminUser').value.trim();
+            const pass = document.getElementById('adminPass').value.trim();
+            const error = document.getElementById('loginError');
+
+            if (user === 'flamboyan' && pass === 'persibjuara') {
+                isAdminLoggedIn = true;
+                closeLoginModal();
+                
+                // Ganti ikon melayang dan tampilkan badge admin
+                document.getElementById('adminBtnIcon').className = 'fa fa-user-gear text-xl';
+                document.getElementById('adminBadge').classList.remove('hidden');
+                document.getElementById('logoutBtn').classList.remove('hidden');
+                
+                // Langsung buka admin panel
+                setTimeout(() => openAdminPanel(), 400);
+            } else {
+                error.classList.remove('hidden');
+            }
+        }
+
+        function logoutAdmin() {
+            isAdminLoggedIn = false;
+            document.getElementById('adminBtnIcon').className = 'fa fa-lock text-xl';
+            document.getElementById('adminBadge').classList.add('hidden');
+            document.getElementById('logoutBtn').classList.add('hidden');
+            closeAdminPanel();
+        }
+
+        function openAdminPanel() {
+            const modal = document.getElementById('adminPanelModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.firstElementChild.classList.replace('scale-95', 'scale-100');
+            }, 10);
+            renderAdminManageList();
+        }
+
+        function closeAdminPanel() {
+            const modal = document.getElementById('adminPanelModal');
+            modal.classList.add('opacity-0');
+            modal.firstElementChild.classList.replace('scale-100', 'scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        // Logika Mutasi Data (Tambah/Hapus Regu & Anggota)
+        function populateAdminDropdowns() {
+            const select = document.getElementById('memberReguSelect');
+            if(!select) return;
+            select.innerHTML = '';
+            Object.keys(reguData).forEach(key => {
+                select.innerHTML += `<option value="${key}">${reguData[key].name}</option>`;
+            });
+        }
+
+        function renderAdminManageList() {
+            const list = document.getElementById('adminManageList');
+            if (!list) return;
+            list.innerHTML = '';
+
+            Object.keys(reguData).forEach(reguKey => {
+                const r = reguData[reguKey];
+                let membersMarkup = '';
+                
+                if (r.members.length === 0) {
+                    membersMarkup = `<span class="text-[10px] text-slate-500 italic block py-0.5">Tidak ada anggota</span>`;
+                } else {
+                    r.members.forEach((m, idx) => {
+                        membersMarkup += `
+                            <div class="flex justify-between items-center bg-slate-900 px-2.5 py-1.5 rounded-lg border border-slate-800/80">
+                                <span class="text-xs font-semibold text-slate-300 uppercase">${m}</span>
+                                <button onclick="removeMember('${reguKey}', ${idx})" class="text-slate-500 hover:text-red-400 text-[11px] transition">
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                            </div>`;
+                    });
+                }
+
+                list.innerHTML += `
+                    <div class="border border-slate-800 rounded-xl p-3 bg-slate-900/20">
+                        <div class="flex justify-between items-center mb-2.5">
+                            <span class="text-xs font-extrabold uppercase tracking-wide flex items-center gap-1.5" style="color: ${r.color}">
+                                <i class="fa fa-folder-open text-[11px]"></i> ${r.name}
+                            </span>
+                            <button onclick="removeRegu('${reguKey}')" class="text-[9px] font-bold text-red-500/80 hover:text-red-400 bg-red-950/25 px-2 py-1 rounded transition border border-red-900/30">
+                                <i class="fa fa-folder-minus mr-1"></i>Hapus Regu
+                            </button>
+                        </div>
+                        <div class="space-y-1.5 pl-3 border-l-2 border-slate-800">
+                            ${membersMarkup}
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function addNewMember() {
+            const reguId = document.getElementById('memberReguSelect').value;
+            const input = document.getElementById('memberNameInput');
+            const name = input.value.trim().toUpperCase();
+
+            if (!name) return;
+            if (reguData[reguId]) {
+                reguData[reguId].members.push(name);
+                input.value = '';
+                render();
+            }
+        }
+
+        function removeMember(reguId, index) {
+            if (reguData[reguId]) {
+                reguData[reguId].members.splice(index, 1);
+                render();
+            }
+        }
+
+        function addNewRegu() {
+            const nameInput = document.getElementById('reguNameInput');
+            const colorInput = document.getElementById('reguColorInput');
+            const name = nameInput.value.trim().toUpperCase();
+            const color = colorInput.value;
+
+            if (!name) return;
+
+            // Generate unique numeric ID
+            const keys = Object.keys(reguData).map(Number);
+            const nextId = keys.length > 0 ? Math.max(...keys) + 1 : 1;
+
+            // Simpan regu baru dengan waktu saat ini agar tidak mengganggu rotasi jadwal masa lalu
+            reguData[nextId] = {
+                name: name,
+                members: [],
+                color: color,
+                createdAt: new Date().toISOString() // Waktu pendaftaran regu baru
+            };
+
+            nameInput.value = '';
+            render();
+        }
+
+        function removeRegu(reguId) {
+            if (Object.keys(reguData).length <= 1) {
+                // Jangan izinkan menghapus jika tersisa hanya 1 regu untuk mencegah kerusakan pembagian jadwal
+                return;
+            }
+            delete reguData[reguId];
+            render();
+        }
+
+        // Penanganan Ekspor Tangkapan Layar JPEG Bersih
         async function downloadImage() {
             const el = document.getElementById('captureArea');
             const controls = document.getElementById('controls');
             
-            // 1. Sembunyikan kontrol navigasi
+            // Sembunyikan kontrol
             controls.style.visibility = 'hidden';
 
-            // 2. Re-render tanpa highlight tanggal aktif sekarang agar hasil cetak JPEG bersih & seragam
+            // Matikan sementara highlight hari aktif saat render tangkapan layar
             render(true);
 
             const isLightTheme = document.body.classList.contains('light-theme');
             const captureBgColor = isLightTheme ? '#ffffff' : '#070c1a';
             
-            // 3. Ambil tangkapan layar menggunakan html2canvas
             const canvas = await html2canvas(el, { 
                 scale: 2, 
                 backgroundColor: captureBgColor, 
                 width: 800 
             });
             
-            // 4. Setelah tangkapan layar selesai diambil, kembalikan highlight di web ke semula
+            // Kembalikan ke normal di web
             render(false);
             controls.style.visibility = 'visible';
 
